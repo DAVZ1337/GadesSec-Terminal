@@ -1,0 +1,6 @@
+{
+  "name": "GadesSecOS Mobile",
+  "description": "Autonomous Linux terminal and Debian ARM64 environment with Tor SOCKS5 fail-closed security",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,81 @@
+MISIÓN: AUDITAR, CORREGIR Y COMPLETAR GadesSec-Mobile
+
+Repositorio: https://github.com/DAVZ1337/GadesSec-Mobile
+
+OBJETIVO
+Continúa el proyecto existente. No lo reescribas desde cero ni sustituyas la arquitectura sin una razón técnica demostrable. Prioriza compilación reproducible, seguridad, funcionamiento real y cambios mínimos.
+
+REGLAS
+- Inspecciona primero el estado actual del repositorio, commits recientes, archivos y workflows. No des por hecho que los fallos descritos siguen presentes.
+- Distingue errores confirmados, riesgos potenciales y mejoras opcionales.
+- No afirmes que algo funciona si no lo has probado.
+- No elimines pruebas ni ocultes errores para lograr una compilación verde.
+- No cambies applicationId, namespace, versionCode, versionName ni firma release sin justificación.
+- No subas keystores, claves API, contraseñas ni secretos al repositorio.
+- Usa cambios pequeños y commits revisables. Evita que varias herramientas editen los mismos archivos a la vez.
+- GitHub es la fuente principal del código. OpenCode puede usar modelos disponibles mediante OmniRoute. No presupongas que OmniRoute se conecta directamente a la interfaz de Google AI Studio.
+- Si no tienes permisos o no puedes ejecutar una prueba, dilo claramente.
+
+FASE 1: COMPILACIÓN
+Investiga el error observado:
+Task :app:validateSigningDebug FAILED
+Keystore file '/home/runner/work/GadesSec-Mobile/GadesSec-Mobile/debug.keystore' not found for signing config 'debugConfig'.
+
+app/build.gradle.kts define debugConfig y busca ${rootDir}/debug.keystore. Revisa también .github/workflows/*.yml. Corrige con el cambio mínimo: usar la firma debug estándar de Android o generar el keystore debug antes de compilar, según convenga. Conserva la configuración de release y sus credenciales. No cambies archivos de firma de publicación. Ejecuta pruebas y compilación y comunica el resultado real. La advertencia KeyboardOptions deprecado no es el error fatal; tampoco trates automáticamente el aviso de strip de bibliotecas como fallo.
+
+FASE 2: AUDITORÍA GENERAL
+Inspecciona código Kotlin, Gradle, workflows, manifiesto/permisos, procesos de terminal, persistencia, PRoot, rootfs Debian, extractor, gestor de paquetes, motor de red, SOCKS5/Tor y pruebas.
+
+DEBIAN, PROOT Y DESCARGAS
+- Comprueba arquitectura/ABI, compatibilidad de PRoot y preparación del rootfs.
+- Comprueba URLs y procedencia de descargas, errores, reintentos, espacio disponible y recuperación de instalaciones incompletas.
+- Verifica hashes contra valores de confianza obtenidos por un canal autenticado o verifica firmas. Calcular un SHA-256 después de descargar no demuestra autenticidad.
+- No sustituyas Debian/PRoot por una simulación. El objetivo es un Debian real mediante PRoot dentro de las limitaciones de Android, sin asumir acceso root al móvil.
+
+EXTRACTOR
+Audita DebianRootfsArchiveExtractor.kt y prueba:
+- Rutas absolutas, ../, rutas duplicadas y conflictos de archivos/directorios.
+- Enlaces simbólicos que salgan del directorio de extracción y entradas posteriores que escriban a través de ellos.
+- Enlaces duros, permisos y fallos de creación.
+- Limpieza tras fallos.
+Evita que una extracción escriba fuera del directorio permitido. No reemplaces silenciosamente enlaces simbólicos fallidos por archivos de texto con su destino.
+
+GESTOR DE PAQUETES
+Audita DebianAptEngine.kt:
+- Verificación criptográfica de InRelease con claves oficiales de Debian.
+- Correspondencia autenticada entre Packages y sus hashes.
+- Exigir verificación válida de tamaño y SHA-256 de los .deb.
+- Dependencias, versiones, alternativas, conflictos y ciclos.
+- Extracción, scripts de mantenimiento, estado dpkg, errores e instalaciones parciales.
+No presentes una extracción manual de .deb como si fuera APT/dpkg completo. Compara con usar APT/dpkg reales dentro de Debian si es más fiable; explica ventajas y riesgos antes de una migración grande.
+
+RED, SOCKS5, TOR Y ESCÁNER
+- Distingue handshake SOCKS5, conexión realmente enrutada por proxy, salida verificada por Tor y protección de todo el tráfico.
+- Comprueba qué comandos usan proxy y cuáles pueden conectarse directamente; prueba qué ocurre si el proxy falla.
+- No prometas anonimato total, kill switch ni ausencia de fugas sin pruebas.
+- Determina si el escáner es TCP propio o Nmap real. No anuncies Nmap si no se utiliza.
+- Limita pruebas de red a localhost, equipos propios o sistemas con autorización.
+
+PRUEBAS
+Cuando sea posible, ejecuta pruebas unitarias, pruebas de extracción segura, integridad/autenticidad de descargas, dependencias, arquitectura, inicialización y persistencia Debian, comandos básicos, compilación debug, generación/verificación del APK y workflow completo. No afirmes haber probado en un teléfono si no tienes un dispositivo real. Indica qué requiere prueba manual.
+
+PLAN DE TRABAJO
+1. Inspecciona repositorio y workflow actual.
+2. Corrige primero el bloqueo de compilación.
+3. Ejecuta y reporta pruebas reales.
+4. Corrige por prioridad los riesgos de extracción, descargas, gestor Debian y red, con cambios pequeños.
+5. Evita cambios estéticos o dependencias nuevas mientras haya problemas importantes.
+6. Antes de migraciones arquitectónicas, compara opciones y explica impacto.
+7. Mantén un resumen técnico de cambios y decisiones.
+
+ENTREGA FINAL
+Informa:
+1. Fallos confirmados.
+2. Archivos cambiados y motivo.
+3. Pruebas ejecutadas y resultados reales.
+4. Si se generó el APK y dónde está.
+5. Problemas pendientes.
+6. Limitaciones de seguridad restantes.
+7. Pasos exactos para probar en Android.
+
+No declares GadesSec-Mobile terminado, seguro ni funcional hasta que las pruebas correspondientes lo demuestren. Empieza inspeccionando el estado actual; no asumas que el diagnóstico antiguo sigue vigente.
